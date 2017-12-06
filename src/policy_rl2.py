@@ -9,7 +9,7 @@ env = gym.make('CartPole-v0')
 def evaluateWeights(weights):
     global env
     sum = 0
-    for i in range(100):
+    for i in range(10):
         state = env.reset()
         done = False
         while not done:
@@ -18,7 +18,7 @@ def evaluateWeights(weights):
             else:
                 state, reward, done, info = env.step(0)
             sum += 1
-    return sum // 100
+    return sum // 10
 
 
 best_weights = np.zeros(4)

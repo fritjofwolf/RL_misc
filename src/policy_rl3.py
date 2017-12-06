@@ -6,32 +6,48 @@ import numpy as np
 
 env = gym.make('CartPole-v0')
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
 def evaluateWeights(weights):
     global env
     sum = 0
-    for i in range(100):
+    iterations = 100
+    for _ in range(iterations):
         state = env.reset()
         done = False
         while not done:
-            if np.inner(weights, state) > 0:
+            print('sigmoid is', sigmoid(np.inner(weights, state)))
+            if sigmoid(np.inner(weights, state)) > np.random.rand():
                 state, reward, done, info = env.step(1)
             else:
                 state, reward, done, info = env.step(0)
             sum += 1
-    return sum // 100
+    return sum // iterations
 
+def compute_gradient(weights):
+    eps = 1
+    gradient = np.zeros(4)
+    old_value = evaluateWeights(weights)
+    for k in range(4):
+        tmp_weights = weights.copy()
+        tmp_weights[k] += eps
+        new_value = evaluateWeights(tmp_weights)
+        gradient[k] = (old_value - new_value) / eps
+    return gradient
 
 best_weights = np.zeros(4)
 best_score = 0
-for i in range(1000):
-    weight_change = [0,0,0.1*np.random.randn(1), 0.1*np.random.randn(1)]
-    # weight_change = 0.1*((np.random.rand(4)*2)-1)
-    weights = best_weights + weight_change
+weights = np.zeros(4)
+for i in range(10000):
+    gradient = compute_gradient(weights)
+    print(weights, gradient)
+    weights += 1*gradient
     score = evaluateWeights(weights)
     if score > best_score:
         best_score = score
         best_weights = weights
-    print(best_score)
+    print(i, score, best_score)
     if best_score > 195:
         print('Number of iterations', i)
         print('Best weights are', best_weights)
