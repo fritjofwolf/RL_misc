@@ -7,24 +7,22 @@ cnt_visited = np.zeros((16,4))
 def play_game(q_function, cnt_visited):
     global env
     sum_return = 0
-    for _ in range(100000):
+    for _ in range(1000):
         state = env.reset()
         action = compute_new_action_eps_greedy(state, np.random.randint(4))
         done = False
         while not done:
             new_state, reward, done, info = env.step(action)
-            #if done:
-                #print(state, new_state, reward)
+            if done and reward == 0:
+               reward = -1
             new_action = compute_new_action_eps_greedy(new_state, action)
             ret = (reward+0.9*q_function[new_state,new_action] - q_function[state, action])
-            #if ret > 0:
-                #print(ret, state, new_state)
             q_function[state, action] += 0.1* ret
             cnt_visited[state, action] += 1
             state = new_state
             action = new_action
-            sum_return += reward
-    print('Average reward per episode is:',sum_return/100000)
+            if reward == 1:
+                sum_return += reward
     return q_function, cnt_visited
 
 def compute_new_action_eps_greedy(current_state, current_action):
@@ -42,10 +40,25 @@ def compute_new_action_eps_greedy(current_state, current_action):
 def compute_new_action_random(current_state, current_action):
     return np.random.randint(0,4)
 
+def evaluate_qfunction(q_function):
+    global env
+    sum_return = 0
+    for _ in range(1000):
+        state = env.reset()
+        action = compute_new_action_eps_greedy(state, np.random.randint(4))
+        done = False
+        while not done:
+            state, reward, done, info = env.step(action)
+            action = compute_new_action_eps_greedy(state, action)
+            sum_return += reward
+    print('Average reward per episode is:',sum_return/1000)
+
+
 q_function = np.zeros((16,4))
 cnt_visited = np.zeros((16,4))
-play_game(q_function, cnt_visited)
+q_function, cnt_visited = play_game(q_function, cnt_visited)
 print('Q-Function ist:')
 print(q_function)
 print('Cnt of States visited is:')
 print(cnt_visited)
+evaluate_qfunction(q_function)
