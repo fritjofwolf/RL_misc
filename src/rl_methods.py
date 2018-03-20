@@ -19,8 +19,25 @@ def train_qfunction_with_mc(q_function, env, iter, alpha, gamma):
             G = elem[2] + gamma * G
     return q_function
 
-def train_qfunction_with_tdl(q_function, env):
-    pass
+def train_qfunction_with_tdl(q_function, env, iter, alpha, gamma, lamb):
+    for _ in range(iter):
+        e_traces = np.zeros((16,4))
+        state = env.reset()
+        action = compute_new_action_eps_greedy(state, q_function)
+        done = False
+        while not done:
+            new_state, reward, done, info = env.step(action)
+            if reward == 0 and done:
+                reward = -1
+            new_action = compute_new_action_eps_greedy(new_state, q_function)
+            delta = (reward+gamma*q_function[new_state,new_action] - q_function[state, action])
+            e_traces[state, action] += 1
+            for i in range(16):
+                for j in range(4):
+                    q_function[i, j] += alpha * delta * e_traces[i,j]
+                    e_traces[i,j] *= gamma*lamb
+            state, action = new_state, new_action
+    return q_function
 
 
 def train_qfunction_with_td0(q_function, env, iter, alpha, gamma):
