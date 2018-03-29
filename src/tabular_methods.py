@@ -1,5 +1,7 @@
 import numpy as np
 
+
+
 def train_qfunction_with_mc(q_function, env, iter, alpha, gamma):
     for _ in range(iter):
         sar_list = []
@@ -57,18 +59,34 @@ def train_qfunction_with_td0(q_function, env, iter, alpha, gamma):
     return q_function
 
 
-def evaluate_qfunction(q_function, env, iter):
-    sum_return = 0
+def train_qfunction_weights_td0(weights, env, iter, alpha, gamma):
+    """
+    Assume that the feature vector is one-hot encoding the states and actions
+    """
     for _ in range(iter):
         state = env.reset()
         action = compute_new_action_eps_greedy(state, q_function)
         done = False
         while not done:
+            new_state, reward, done, info = env.step(action)
+            
+    return weights
+
+def evaluate_qfunction(q_function, env, iter):
+    sum_return = 0
+    for _ in range(iter):
+        state = env.reset()
+        action = compute_new_action_greedy(state, q_function)
+        done = False
+        while not done:
             state, reward, done, info = env.step(action)
-            action = compute_new_action_eps_greedy(state, q_function)
+            action = compute_new_action_greedy(state, q_function)
             sum_return += reward
     print('Average reward per episode is:', sum_return/iter)
 
+def compute_new_action_greedy(current_state, q_function):
+    action = np.argmax(q_function[current_state,:])
+    return action
 
 def compute_new_action_eps_greedy(current_state, q_function):
     eps = 0.1
@@ -82,3 +100,7 @@ def compute_new_action_eps_greedy(current_state, q_function):
 
 def compute_new_action_random(current_state):
     return np.random.randint(0,4)
+
+
+def compute_greedy_policy_from_qfunction(qfunction):
+    pass
