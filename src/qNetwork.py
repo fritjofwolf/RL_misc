@@ -21,7 +21,7 @@ weights = np.random.randn(9)
 alpha = 0.1
 gamma = 0.99
 epsilon = 1
-for i in range(10000):
+for i in range(1000):
     # if i % 1000 == 0:
     #     print(weights)
     #     epsilon /= 2
