@@ -3,27 +3,33 @@ import progressbar
 from collections import deque
 import random
 
-state_space = 5
-action_space = 2
+state_space = 4
+action_space= 2
 
 def train_linear_qfunction_with_td0(mlp, env, iter, alpha, gamma):
-    bar = progressbar.ProgressBar()
+    # bar = progressbar.ProgressBar()
+    eps = 0.5
     mlp = do_initial_fit(mlp, env)
     replay_mem = deque(maxlen = 10000)
-    for i in bar(range(iter)):
+    for i in range(iter):
+        if i == 200:
+            alpha /= 10
+        elif i == 1000:
+            alpha /= 10
+        eps *= 0.999
         #if i % 100 == 0 and i != 0 or i == 1:
             #print('Die Gewichte und Biase nach ' + str(i)+ ' iterationen sind:', mlp.coefs_, mlp.intercepts_)
         state = env.reset()
-        action = compute_new_action_eps_greedy(state, mlp)
+        action = compute_new_action_eps_greedy(state, mlp, eps)
         done = False
         old_qvalue = compute_qfunction(mlp, state)
         cnt = 0
         while not done:
             # env.render()
             new_state, reward, done, info = env.step(action)
-            if done:
+            if done and cnt != 199:
                 reward = -10
-            new_action = compute_new_action_eps_greedy(new_state, mlp)
+            new_action = compute_new_action_eps_greedy(new_state, mlp, eps)
             #print(new_action)
             new_qvalue = compute_qfunction(mlp, new_state)
             #print(compute_qfunction(mlp, new_state))
@@ -34,13 +40,13 @@ def train_linear_qfunction_with_td0(mlp, env, iter, alpha, gamma):
             state, action = new_state, new_action
             old_qvalue = new_qvalue
             cnt += 1
-        print(cnt)
+        print(i, cnt, eps)
     return mlp
 
 def get_training_set(replay_mem):
     x = []
     y = []
-    for i in range(100):
+    for i in range(30):
         (a,b) = replay_mem[random.randrange(len(replay_mem))]
         x.append(a)
         y.append(b)
@@ -55,7 +61,7 @@ def compute_target(old_qvalue, new_qvalue, gamma, reward, action, new_action):
 
 def do_initial_fit(mlp, env):
     state = env.reset()
-    mlp.partial_fit([state], [[0,0]])
+    mlp.partial_fit([state], [[0 for i in range(action_space)]])
     return mlp
 
 def evaluate_qfunction(mlp, env, iter):
@@ -81,8 +87,8 @@ def compute_new_action_greedy(state, mlp):
     return action
 
 
-def compute_new_action_eps_greedy(state, mlp):
-    if np.random.rand() < 0.3:
+def compute_new_action_eps_greedy(state, mlp, eps):
+    if np.random.rand() < eps:
         action = np.random.randint(action_space)
     else:
         action_values = mlp.predict([state])
